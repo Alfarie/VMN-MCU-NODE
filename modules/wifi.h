@@ -14,7 +14,7 @@ class VmnClient : public Task
 {
   public:
     static VmnClient *s_instance;
-    VmnClient() : Task(MsToTaskTime(500))
+    VmnClient() : Task(MsToTaskTime(2000))
     {
         // We start by connecting to a WiFi network
 
@@ -74,51 +74,13 @@ class VmnClient : public Task
             String lcdStr = String(station) + " val:" + String(ec) + "/" + String(vol);
             lcd.setCursor(0, 1);
             lcd.print(lcdStr);
-            // This will send the request to the server
-            if (state == 0)
-            {
-                currentTime += delta_time;
-                if (currentTime > 2000)
-                {
-                    
-                    const int httpPort = 80;
-                    if (!client.connect(host, httpPort))
-                    {
-                        lcd.setCursor(0, 1);
-                        lcd.print("HTTP FAILED");
-                        Serial.println("connection failed");
-                        return;
-                    }
-                    Serial.print("Requesting URL: ");
-                    Serial.println(url);
-                    client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                                 "Host: " + host + "\r\n" +
-                                 "Connection: close\r\n\r\n");
-                    state = 1;
-                    currentTime = 0;
-                }
-            }
-            else if (state == 1)
-            {
-                currentTime += delta_time;
-                if (currentTime > 3000)
-                {
-                    Serial.print("close connection");
-                    state = 0;
-                    currentTime = 0;
-                    client.stop();
-                }
 
-                if (client.available())
-                {
-                    Serial.print("Recieve data");
-                    client.stop();
-                    state = 0;
-                    currentTime = 0;
-                    client.stop();
-                }
-            }
-            // Read all the lines of the reply from server and print them to Serial*/
+            Serial.print("Requesting URL: ");
+            Serial.println(url);
+
+            client.print(String("GET ") + url + " HTTP/1.1\r\n" +
+                         "Host: " + host + "\r\n" +
+                         "Connection: close\r\n\r\n");
         }
     }
 };
