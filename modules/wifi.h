@@ -66,7 +66,7 @@ class VmnClient : public Task
         { //Check the current connection status
             Serial.print("connecting to ");
             Serial.println(host);
-
+            WiFiClient client;
             float ec = ECSensor::instance()->GetEC();
             float vol = LoadCell::instance()->getVal();
             String url = "/vmndata?" + String(station) + "," + String(ec) + "," + String(vol);
@@ -80,7 +80,7 @@ class VmnClient : public Task
                 currentTime += delta_time;
                 if (currentTime > 2000)
                 {
-                    WiFiClient client;
+                    
                     const int httpPort = 80;
                     if (!client.connect(host, httpPort))
                     {
