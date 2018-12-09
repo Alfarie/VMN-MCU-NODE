@@ -16,7 +16,8 @@ int station = 0;
 TaskManager taskManager;
 
 void setup(){
-    lcd.begin();
+    lcd.init();
+    lcd.blacklight();
     Serial.begin(115200);
     taskManager.StartTask(WaterSensor::instance());
     taskManager.StartTask(ECSensor::instance());
