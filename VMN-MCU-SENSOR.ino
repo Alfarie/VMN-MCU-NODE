@@ -17,7 +17,7 @@ TaskManager taskManager;
 
 void setup(){
     lcd.init();
-    lcd.blacklight();
+    lcd.backlight();
     Serial.begin(115200);
     taskManager.StartTask(WaterSensor::instance());
     taskManager.StartTask(ECSensor::instance());
