@@ -12,42 +12,28 @@ LiquidCrystal_I2C lcd(0x27, 16, 2);
 const char *ssid = "vmnnetwork";
 const char *password = "raspberry";
 const char *host = "192.168.4.1";
-int station = 0;
+int station = 1;
 #include "./modules/wifi.h"
 
 TaskManager taskManager;
 
-unsigned long currentTime = 0;
-void setup()
+void coreTask(void *pvParameters)
 {
-    // lcd.init();
-    lcd.backlight();
-    Serial.begin(115200);
-    taskManager.StartTask(WaterSensor::instance());
-    taskManager.StartTask(ECSensor::instance());
-    taskManager.StartTask(LoadCell::instance());
-    // taskManager.StartTask(VmnClient::instance());
+
+    String taskMessage = "Task running on core ";
+    taskMessage = taskMessage + xPortGetCoreID();
     VmnClient::instance();
-}
-void loop()
-{
-    taskManager.Loop();
-    unsigned long diff = millis() - currentTime;
-    if (diff > 3000)
+    while (true)
     {
-        if ((WiFi.status() == WL_CONNECTED))
-        {
-            lcd.setCursor(0, 1);
-            lcd.print("WIFI ERROR.");
-            Serial.println("WIFI ERROR");
-        }
-        currentTime = millis();
+        delay(3000);
         Serial.print("connecting to ");
         Serial.println(host);
 
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
         const int httpPort = 80;
+
+        //connecting time ~ 4-5 ms
         if (!client.connect(host, httpPort))
         {
             lcd.setCursor(0, 1);
@@ -59,33 +45,55 @@ void loop()
         // We now create a URI for the request
         float ec = ECSensor::instance()->GetEC();
         float vol = LoadCell::instance()->getVal();
-        String url = "/vmndata?" + String(station) + "," + String(ec) + "," + String(vol);
+        String url = "{" + String(station) + "," + String(1.5) + "," + String(456) + "}";
         Serial.print("Requesting URL: ");
         Serial.println(url);
 
-        // This will send the request to the server
-        client.print(String("GET ") + url + " HTTP/1.1\r\n" +
-                     "Host: " + host + "\r\n" +
-                     "Connection: close\r\n\r\n");
-        // unsigned long timeout = millis();
-        // while (client.available() == 0)
-        // {
-        //     if (millis() - timeout > 5000)
-        //     {
-        //         Serial.println(">>> Client Timeout !");
-        //         client.stop();
-        //         return;
-        //     }
-        // }
+        client.print(url);
 
-        // // Read all the lines of the reply from server and print them to Serial
-        // while (client.available())
-        // {
-        //     String line = client.readStringUntil('\r');
-        //     Serial.print(line);
-        // }
+        unsigned long timeout = millis();
+        while (client.available() == 0)
+        {
+            if (millis() - timeout > 3000)
+            {
+                Serial.println(">>> Client Timeout !");
+                client.stop();
+                return;
+            }
+        }
+
+        // Read all the lines of the reply from server and print them to Serial
+        while (client.available())
+        {
+            String line = client.readStringUntil('\r');
+            Serial.print(line);
+        }
 
         Serial.println();
         Serial.println("closing connection");
     }
+}
+void setup()
+{
+    lcd.init();
+    lcd.backlight();
+    Serial.begin(115200);
+    taskManager.StartTask(WaterSensor::instance());
+    taskManager.StartTask(ECSensor::instance());
+    taskManager.StartTask(LoadCell::instance());
+    // taskManager.StartTask(VmnClient::instance());
+
+    xTaskCreatePinnedToCore(
+        coreTask,   /* Function to implement the task */
+        "coreTask", /* Name of the task */
+        10000,      /* Stack size in words */
+        NULL,       /* Task input parameter */
+        0,          /* Priority of the task */
+        NULL,       /* Task handle. */
+        0);
+}
+void loop()
+{
+    // Serial.println(xPortGetCoreID());
+    taskManager.Loop();
 }

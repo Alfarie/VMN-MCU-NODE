@@ -1,6 +1,6 @@
 #include <Task.h>
 extern TaskManager taskManager;
-#define EC_SENSOR A0
+#define EC_SENSOR 36
 class ECSensor : public Task
 {
 public:
@@ -48,7 +48,7 @@ private:
         num++;
       }
       aVal = aVal / num;
-      aVal = aVal * 5000 / 1024;
+      aVal = aVal * 3300 / 4096;
       readIndex = 0;
 
       float TempCoefficient = 1.0 + 0.0185 * (WaterSensor::instance()->GetWater() - 25.0);

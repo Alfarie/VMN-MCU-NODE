@@ -18,7 +18,7 @@ class VmnClient : public Task
         // We start by connecting to a WiFi network
 
         Serial.println();
-        Serial.println();
+        Serial.println("Start WiFi on Core: " + String(xPortGetCoreID()));
         Serial.print("Connecting to ");
         Serial.println(ssid);
 

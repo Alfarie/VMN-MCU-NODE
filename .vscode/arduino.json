@@ -1,6 +1,6 @@
 {
     "board": "espressif:esp32:node32s",
     "sketch": "VMN-MCU-SENSOR.ino",
-    "port": "/dev/cu.usbserial-DN0358X8",
+    "port": "/dev/cu.usbserial-DN0359FC",
     "configuration": "FlashFreq=80,UploadSpeed=921600"
 }
