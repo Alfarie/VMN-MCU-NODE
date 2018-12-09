@@ -67,22 +67,12 @@ class VmnClient : public Task
             Serial.print("connecting to ");
             Serial.println(host);
 
-            WiFiClient client;
-            const int httpPort = 80;
-            if (!client.connect(host, httpPort))
-            {
-                lcd.setCursor(0,1);
-                lcd.print("HTTP FAILED");
-                Serial.println("connection failed");
-                return;
-            }
             float ec = ECSensor::instance()->GetEC();
             float vol = LoadCell::instance()->getVal();
             String url = "/vmndata?" + String(station) + "," + String(ec) + "," + String(vol);
 
-            
-            String lcdStr = String(station) + " val:"+String(ec) + "/" + String(vol);
-            lcd.setCursor(0,1);
+            String lcdStr = String(station) + " val:" + String(ec) + "/" + String(vol);
+            lcd.setCursor(0, 1);
             lcd.print(lcdStr);
             // This will send the request to the server
             if (state == 0)
@@ -90,6 +80,15 @@ class VmnClient : public Task
                 currentTime += delta_time;
                 if (currentTime > 2000)
                 {
+                    WiFiClient client;
+                    const int httpPort = 80;
+                    if (!client.connect(host, httpPort))
+                    {
+                        lcd.setCursor(0, 1);
+                        lcd.print("HTTP FAILED");
+                        Serial.println("connection failed");
+                        return;
+                    }
                     Serial.print("Requesting URL: ");
                     Serial.println(url);
                     client.print(String("GET ") + url + " HTTP/1.1\r\n" +
@@ -110,7 +109,8 @@ class VmnClient : public Task
                     client.stop();
                 }
 
-                if(client.available()){
+                if (client.available())
+                {
                     Serial.print("Recieve data");
                     client.stop();
                     state = 0;
