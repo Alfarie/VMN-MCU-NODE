@@ -35,11 +35,12 @@ void loop()
     unsigned long diff = millis() - currentTime;
     if (diff > 3000)
     {
-         if ((WiFi.status() == WL_CONNECTED)){
+        if ((WiFi.status() == WL_CONNECTED))
+        {
             lcd.setCursor(0, 1);
             lcd.print("WIFI ERROR.");
             Serial.println("WIFI ERROR");
-         }
+        }
         currentTime = millis();
         Serial.print("connecting to ");
         Serial.println(host);
@@ -49,13 +50,16 @@ void loop()
         const int httpPort = 80;
         if (!client.connect(host, httpPort))
         {
+            lcd.setCursor(0, 1);
+            lcd.print("CONNECTION ERROR.");
             Serial.println("connection failed");
             return;
         }
 
         // We now create a URI for the request
-        String url = "/";
-
+        float ec = ECSensor::instance()->GetEC();
+        float vol = LoadCell::instance()->getVal();
+        String url = "/vmndata?" + String(station) + "," + String(ec) + "," + String(vol);
         Serial.print("Requesting URL: ");
         Serial.println(url);
 
