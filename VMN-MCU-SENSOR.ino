@@ -3,7 +3,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
-LiquidCrystal_I2C lcd(0x27, 16, 2);
+LiquidCrystal_I2C lcd(0x3d, 16, 2);
 
 #include "./modules/VmnSensors/water.h"
 #include "./modules/VmnSensors/ec.h"
@@ -20,9 +20,19 @@ TaskManager taskManager;
 void coreTask(void *pvParameters)
 {
 
+    lcd.init();
+    lcd.backlight();
+
     String taskMessage = "Task running on core ";
     taskMessage = taskMessage + xPortGetCoreID();
     VmnClient::instance();
+
+    lcd.setCursor(0, 0);
+    lcd.print("Initializing...");
+    lcd.clear();
+    delay(2000);
+    lcd.print("Initialized: " + String(station));
+
     while (true)
     {
         delay(3000);
@@ -42,12 +52,18 @@ void coreTask(void *pvParameters)
             return;
         }
 
+        lcd.setCursor(0, 0);
+        lcd.print("WiFi: CNT STA:" + String(station));
+
         // We now create a URI for the request
         float ec = ECSensor::instance()->GetEC();
-        float vol = LoadCell::instance()->getVal();
-        String url = "{" + String(station) + "," + String(1.5) + "," + String(456) + "}";
+        float vol = LoadCellSensor::instance()->getVal();
+        String url = "{" + String(station) + "," + String(ec) + "," + String(vol) + "}";
         Serial.print("Requesting URL: ");
         Serial.println(url);
+
+        lcd.setCursor(0, 1);
+        lcd.print("EC:" + String(ec) + " Vol:" + String(vol));
 
         client.print(url);
 
@@ -75,12 +91,13 @@ void coreTask(void *pvParameters)
 }
 void setup()
 {
+
     lcd.init();
     lcd.backlight();
     Serial.begin(115200);
     taskManager.StartTask(WaterSensor::instance());
     taskManager.StartTask(ECSensor::instance());
-    taskManager.StartTask(LoadCell::instance());
+    taskManager.StartTask(LoadCellSensor::instance());
     // taskManager.StartTask(VmnClient::instance());
 
     xTaskCreatePinnedToCore(

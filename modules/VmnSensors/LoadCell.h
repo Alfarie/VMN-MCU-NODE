@@ -1,32 +1,67 @@
 #include <Task.h>
+#include <HX711_ADC.h>
+#define TBT 25
+//HX711 constructor (dout pin, sck pin)
+HX711_ADC LoadCell(18, 19);
 extern TaskManager taskManager;
-class LoadCell : public Task
+class LoadCellSensor : public Task
 {
   public:
-    static LoadCell *s_instance;
-    LoadCell() : Task(MsToTaskTime(1000)) {
+    static LoadCellSensor *s_instance;
+    LoadCellSensor() : Task(MsToTaskTime(100))
+    {
+        pinMode(25,INPUT);
         volume = 0;
+        Serial.println("Wait...");
+        LoadCell.begin();
+        long stabilisingtime = 2000; // tare preciscion can be improved by adding a few seconds of stabilising time
+        LoadCell.start(stabilisingtime);
+        LoadCell.setCalFactor(696.0/2); // user set calibration factor (float)
+        Serial.println("Startup + tare is complete");
     }
-    static LoadCell *instance()
+    static LoadCellSensor *instance()
     {
         if (!s_instance)
-            s_instance = new LoadCell;
+            s_instance = new LoadCellSensor;
         return s_instance;
     }
 
-    float getVal(){
+    float getVal()
+    {
         return volume;
     }
 
   private:
     float volume;
+    unsigned long ct = 0;
+    unsigned long bt = 0;
     virtual bool OnStart() { return true; }
-    virtual void OnUpdate(uint32_t delta_time) {
-        volume = getLoadCell();
+    virtual void OnUpdate(uint32_t delta_time)
+    {
+        LoadCell.update();
+        ct += delta_time;
+        if(ct >= 2000){
+            volume = getLoadCellSensor();
+            ct = 0;
+        }
+        if(digitalRead(TBT) == LOW){
+            bt += delta_time;
+            if(bt >= 3000){
+                Serial.println("Tare complete");
+                LoadCell.tareNoDelay();
+                bt = 0;
+                // show lcd status
+            }
+        }
+        else{
+            bt = 0;
+        }
     }
 
-    float getLoadCell(){
-        return 0;
+    float getLoadCellSensor()
+    {
+        float val = LoadCell.getData();
+        return (val < 0)? val*(-1):val;
     }
 };
-LoadCell *LoadCell::s_instance = 0;
+LoadCellSensor *LoadCellSensor::s_instance = 0;
