@@ -1,11 +1,13 @@
 #include <Task.h>
+#include <EEPROM.h>
 extern TaskManager taskManager;
 #define EC_SENSOR 36
 class ECSensor : public Task
 {
 public:
   static ECSensor *s_instance;
-  ECSensor() : Task(MsToTaskTime(100)){
+  ECSensor() : Task(MsToTaskTime(100))
+  {
     ec = 0;
   };
   static ECSensor *instance()
@@ -19,12 +21,33 @@ public:
   {
     return aVal;
   }
-  float GetEC(){
+  float GetEC()
+  {
     return ec;
   }
 
+  void calOnePointFour()
+  {
+    if(ec <= 0 ){
+      return;
+    }
+    float cal = 1.413 / ec;
+    calibrationData.ecCal = cal;
+    EEPROM_Manager::UpdateCalibration();
+  }
+
+  void calTwelve()
+  {
+    if(ec <= 0 ){
+      return;
+    }
+    float cal = 12.88 / ec;
+    calibrationData.ecCal = cal;
+    EEPROM_Manager::UpdateCalibration();
+  }
+
 private:
-  float aVal,ec;
+  float aVal, ec;
   int analogReadVal[30];
   int readIndex = 0;
   virtual bool OnStart()
@@ -60,10 +83,10 @@ private:
         ec = 6.98 * CoefficientVolatge - 127; //3ms/cm<EC<=10ms/cm
       else
         ec = 5.3 * CoefficientVolatge + 2278;
-      ec = ec/1000;
-      
-      if(ec < 0) ec = 0;
-
+      ec = ec / 1000;
+      ec = ec * calibrationData.ecCal;
+      if (ec < 0)
+        ec = 0;
     }
   }
 

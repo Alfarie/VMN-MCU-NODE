@@ -17,28 +17,32 @@ class VmnClient : public Task
     {
         // We start by connecting to a WiFi network
 
+        //LcdHandler::instance()->setPage(0);
         Serial.println();
         Serial.println("Start WiFi on Core: " + String(xPortGetCoreID()));
         Serial.print("Connecting to ");
         Serial.println(ssid);
 
         WiFi.begin(ssid, password);
-
-        lcd.setCursor(0, 0);
-        lcd.print("Connecting...");
+        page.page1.line1 = "WiFi Init...";
+        page.page1.line2 = "Connecting...";
+        //LcdHandler::instance()->setLine1("WiFi Init...");
+        //LcdHandler::instance()->setLine2("Connecting...");
         while (WiFi.status() != WL_CONNECTED)
         {
             delay(500);
             Serial.print(".");
         }
-
+        //LcdHandler::instance()->setLine2("Connected");
+        page.page1.line2 = "Connected....";
+        delay(1000);
         Serial.println("");
         Serial.println("WiFi connected");
         Serial.println("IP address: ");
         Serial.println(WiFi.localIP());
-
-        lcd.setCursor(0, 0);
-        lcd.print("WiFi Connected");
+        
+        page.LCD_PAGE = 1;
+        //LcdHandler::instance()->setPage(1);
     }
 
     static VmnClient *instance()
@@ -54,13 +58,12 @@ class VmnClient : public Task
     virtual bool OnStart() { return true; }
     virtual void OnUpdate(uint32_t delta_time)
     {
-
         requestData(delta_time);
     }
 
     void requestData(uint32_t delta_time)
     {
-
+        
     }
 };
 VmnClient *VmnClient::s_instance = 0;

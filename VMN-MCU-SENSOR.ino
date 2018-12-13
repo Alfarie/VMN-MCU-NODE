@@ -2,8 +2,11 @@
 
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
+#include <EEPROM.h>
 
 LiquidCrystal_I2C lcd(0x3d, 16, 2);
+
+#include "./modules/eeprom.h"
 
 #include "./modules/VmnSensors/water.h"
 #include "./modules/VmnSensors/ec.h"
@@ -12,26 +15,27 @@ LiquidCrystal_I2C lcd(0x3d, 16, 2);
 const char *ssid = "vmnnetwork";
 const char *password = "raspberry";
 const char *host = "192.168.4.1";
+
 int station = 1;
+String CNT = "CNT";
+String RST = "P";
+#include "./modules/lcd.h"
+
 #include "./modules/wifi.h"
 
 TaskManager taskManager;
 
+
 void coreTask(void *pvParameters)
 {
-
-    lcd.init();
-    lcd.backlight();
-
+    EEPROM_Manager::InitEEPROM();
     String taskMessage = "Task running on core ";
     taskMessage = taskMessage + xPortGetCoreID();
     VmnClient::instance();
 
-    lcd.setCursor(0, 0);
-    lcd.print("Initializing...");
-    lcd.clear();
+    //LcdHandler::instance()->setLine("WiFi Init...");
     delay(2000);
-    lcd.print("Initialized: " + String(station));
+    //LcdHandler::instance()->setLine("Initialized: " + String(station));
 
     while (true)
     {
@@ -42,18 +46,28 @@ void coreTask(void *pvParameters)
         // Use WiFiClient class to create TCP connections
         WiFiClient client;
         const int httpPort = 80;
+       
+        //LcdHandler::instance()->setLine("WiFi:CNT STA:" + String(station) + " P");
 
+        if (WiFi.status() != WL_CONNECTED){
+            CNT = "DCT";
+        }
+        else{
+            CNT = "CNT";
+        }
+
+        RST = "P";
         //connecting time ~ 4-5 ms
         if (!client.connect(host, httpPort))
         {
-            lcd.setCursor(0, 1);
-            lcd.print("CONNECTION ERROR.");
+           //LcdHandler::instance()->setLine("WiFi:ERR STA:" + String(station) + " E");
+            RST = "E";
             Serial.println("connection failed");
-            return;
+            continue;
         }
-
-        lcd.setCursor(0, 0);
-        lcd.print("WiFi: CNT STA:" + String(station));
+        
+       //LcdHandler::instance()->setLine("WiFi:CNT STA:" + String(station) + " S");
+         RST = "S";
 
         // We now create a URI for the request
         float ec = ECSensor::instance()->GetEC();
@@ -62,9 +76,6 @@ void coreTask(void *pvParameters)
         Serial.print("Requesting URL: ");
         Serial.println(url);
 
-        lcd.setCursor(0, 1);
-        lcd.print("EC:" + String(ec) + " Vol:" + String(vol));
-
         client.print(url);
 
         unsigned long timeout = millis();
@@ -72,9 +83,10 @@ void coreTask(void *pvParameters)
         {
             if (millis() - timeout > 3000)
             {
+                 RST = "T";
                 Serial.println(">>> Client Timeout !");
                 client.stop();
-                return;
+                break;
             }
         }
 
@@ -91,14 +103,12 @@ void coreTask(void *pvParameters)
 }
 void setup()
 {
-
-    lcd.init();
-    lcd.backlight();
+    taskManager.StartTask(LcdHandler::instance());
     Serial.begin(115200);
     taskManager.StartTask(WaterSensor::instance());
     taskManager.StartTask(ECSensor::instance());
     taskManager.StartTask(LoadCellSensor::instance());
-    // taskManager.StartTask(VmnClient::instance());
+    
 
     xTaskCreatePinnedToCore(
         coreTask,   /* Function to implement the task */
@@ -111,6 +121,5 @@ void setup()
 }
 void loop()
 {
-    // Serial.println(xPortGetCoreID());
     taskManager.Loop();
 }

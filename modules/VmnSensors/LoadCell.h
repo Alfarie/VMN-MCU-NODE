@@ -31,6 +31,11 @@ class LoadCellSensor : public Task
         return volume;
     }
 
+    void tareZero(){
+        Serial.println("Tare Zero");
+        LoadCell.tareNoDelay();
+    }
+
   private:
     float volume;
     unsigned long ct = 0;
@@ -40,23 +45,12 @@ class LoadCellSensor : public Task
     {
         LoadCell.update();
         ct += delta_time;
-        if(ct >= 2000){
+        if(ct >= 1000){
             volume = getLoadCellSensor();
             ct = 0;
         }
-        if(digitalRead(TBT) == LOW){
-            bt += delta_time;
-            if(bt >= 3000){
-                Serial.println("Tare complete");
-                LoadCell.tareNoDelay();
-                bt = 0;
-                // show lcd status
-            }
-        }
-        else{
-            bt = 0;
-        }
     }
+
 
     float getLoadCellSensor()
     {
