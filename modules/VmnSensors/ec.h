@@ -8,6 +8,7 @@ public:
   static ECSensor *s_instance;
   ECSensor() : Task(MsToTaskTime(100))
   {
+    pinMode(EC_SENSOR, INPUT);
     ec = 0;
   };
   static ECSensor *instance()
