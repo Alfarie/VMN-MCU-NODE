@@ -28,11 +28,11 @@ class VmnClient : public Task
         page.page1.line2 = "Connecting...";
         //LcdHandler::instance()->setLine1("WiFi Init...");
         //LcdHandler::instance()->setLine2("Connecting...");
-        while (WiFi.status() != WL_CONNECTED)
-        {
-            delay(500);
-            Serial.print(".");
-        }
+        // while (WiFi.status() != WL_CONNECTED)
+        // {
+        //     delay(500);
+        //     Serial.print(".");
+        // }
         //LcdHandler::instance()->setLine2("Connected");
         page.page1.line2 = "Connected....";
         delay(1000);
