@@ -27,9 +27,16 @@ public:
     return ec;
   }
 
+  void calZero()
+  {
+    calibrationData.ecCal = 1.0;
+    EEPROM_Manager::UpdateCalibration();
+  }
+
   void calOnePointFour()
   {
-    if(ec <= 0 ){
+    if (ec <= 0)
+    {
       return;
     }
     float cal = 1.413 / ec;
@@ -39,7 +46,8 @@ public:
 
   void calTwelve()
   {
-    if(ec <= 0 ){
+    if (ec <= 0)
+    {
       return;
     }
     float cal = 12.88 / ec;
