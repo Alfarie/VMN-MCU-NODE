@@ -27,36 +27,34 @@ public:
     return ec;
   }
 
-  void calZero()
-  {
-    calibrationData.ecCal = 1.0;
-    EEPROM_Manager::UpdateCalibration();
+  float GetRawEC(){
+    return rawEC;
   }
 
   void calOnePointFour()
   {
-    if (ec <= 0)
+    if (rawEc <= 0)
     {
       return;
     }
-    float cal = 1.413 / ec;
+    float cal = 1.413 / rawEc;
     calibrationData.ecCal = cal;
     EEPROM_Manager::UpdateCalibration();
   }
 
   void calTwelve()
   {
-    if (ec <= 0)
+    if (rawEc <= 0)
     {
       return;
     }
-    float cal = 12.88 / ec;
+    float cal = 12.88 / rawEc;
     calibrationData.ecCal = cal;
     EEPROM_Manager::UpdateCalibration();
   }
 
 private:
-  float aVal, ec;
+  float aVal, ec,rawEc;
   int analogReadVal[30];
   int readIndex = 0;
   virtual bool OnStart()
@@ -93,6 +91,7 @@ private:
       else
         ec = 5.3 * CoefficientVolatge + 2278;
       ec = ec / 1000;
+      rawEc = ec;
       ec = ec * calibrationData.ecCal;
       if (ec < 0)
         ec = 0;

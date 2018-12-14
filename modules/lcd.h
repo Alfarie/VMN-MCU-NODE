@@ -78,7 +78,7 @@ class ButtonHandler : public Task
         }
         if(btnPressed && digitalRead(TBT) == HIGH){
             if(btnTimeout <= 1000){
-                page.LCD_PAGE = (page.LCD_PAGE >=5)?1:page.LCD_PAGE + 1;
+                page.LCD_PAGE = (page.LCD_PAGE >=4)?1:page.LCD_PAGE + 1;
             }
             Serial.println("Button has been pressed for " + String(btnTimeout) + " ms");
             btnPressed = false;
@@ -101,13 +101,6 @@ class ButtonHandler : public Task
 
         }
         else if (page.LCD_PAGE == 4)
-        {
-            lcd.setCursor(0, 1);
-            lcd.print("EC Zero->Success!");
-            ECSensor::instance()->calZero();
-
-        }
-        else if (page.LCD_PAGE == 5)
         {
             lcd.setCursor(0, 1);
             lcd.print("Set Zero Success");
@@ -184,11 +177,6 @@ class LcdHandler : public Task
             lcd.print("EC:" + String(ECSensor::instance()->GetEC()) + " CAL:12");
         }
         else if (currentPage == 4)
-        {
-            lcd.setCursor(0, 0);
-            lcd.print("EC SetZero: ");
-        }
-        else if (currentPage == 5)
         {
             lcd.setCursor(0, 0);
             lcd.print("Set Zero Vol:" + String(LoadCellSensor::instance()->getVal()));
