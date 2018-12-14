@@ -28,7 +28,7 @@ public:
   }
 
   float GetRawEC(){
-    return rawEC;
+    return rawEc;
   }
 
   void calOnePointFour()
